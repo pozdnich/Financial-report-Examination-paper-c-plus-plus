@@ -1,0 +1,2100 @@
+#include<iostream>
+#include<stdlib.h>
+#include<time.h>
+#include <windows.h>
+#include <mmsystem.h>
+#include <stdio.h>
+#include <Windows.h>
+#include <ctime>
+#include <stdio.h>
+#include <cstring>
+#include <cassert>
+#include <conio.h>
+#include <fstream>
+#include <vector>
+#include <random>
+#include <locale>
+#include <string>
+#include <iomanip>
+
+using namespace std;
+class koshel {
+    
+    int koshelek=0;
+    
+public:
+    koshel() {
+        ofstream fout("Kohel_zatrat.txt");
+         fout.close();
+         ofstream out("Kohel_popoln.txt");
+         out.close();
+         ofstream ut("Kohel_top3_zatrat_m.txt");
+         ut.close();
+         ofstream ut1("Kohel_top3_zatrat_n.txt");
+         ut1.close();
+         ofstream t("Kohel_top3_kategory_m.txt");
+         t.close();
+         ofstream t1("Kohel_top3_kategory_n.txt");
+         t1.close();
+         
+    }
+    // Пополнение денег
+    void popoln( int sym,int d,int n,int m) {
+            koshelek += sym;
+            ofstream fout;
+            fout.open("Kohel_popoln.txt", ios_base::app);
+            fout << "Дата: " << d << "." << n << "." << m << "\nСумма: " << sym << "\n";
+            fout.close();
+    }
+    // Внесение в общий отчёт затрат в кошельке
+    void zatrat(int d, int n, int m, int sym, string kategory) {
+        if (koshelek - sym > 0) {
+           koshelek -= sym;
+           ofstream fout;
+           fout.open("Kohel_zatrat.txt", ios_base::app);
+           fout << "Дата: " << d << "." << n << "." << m << "\nСумма: " << sym << "\nКатегория: "<< kategory<<"\n";
+           fout.close();
+        }
+        else {
+            int sym1;
+            cout << "Пополните счёт на кошельке!(на сумму больше "<< sym<<")\n";
+            do {
+                cin >> sym1;
+            } while (sym1 < sym);
+            popoln(sym1, d, n, m);
+            koshelek -= sym;
+            ofstream fout;
+            fout.open("Kohel_zatrat.txt", ios_base::app);
+            fout << "Дата: " << d << "." << n << "." << m << "\nСумма: " << sym << "\nКатегория: " << kategory << "\n";
+            fout.close();
+        }
+    }
+
+    //ТОП 3 ЗАТРАТ
+
+    //Проверка условия для топ 3 затратам за месяц
+    bool prover_m(int* a, int b, int c,int m,int m_end) {
+        bool ok=false;
+        if (c == 0) {
+            if (a[c] < b&& m== m_end) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }if (c == 1) {
+            if (a[c] < b&&b!= a[c-1] && m == m_end) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }if (c == 2) {
+            if (a[c] < b && b != a[c - 1] && b != a[c - 2] && m == m_end) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }
+    }
+    //Вычисление топ 3 за месяц
+    int* top_3_m(int a, int b, int* v_s_m, int* s_s_m,int m) {
+        ifstream fout;
+        int sch = 0;
+        while (sch < 3) {        
+        fout.open("Kohel_zatrat.txt");
+            for (int day = 1, nedel = 1, mesec = 1,m_end=m; !fout.eof(); a++) {
+                string word;
+                fout >> word;
+                if (a == 4) {
+                    int res = stoi(word);
+                    if (prover_m(v_s_m, res, sch, mesec, m_end)) {
+                        v_s_m[sch] = res;
+                        s_s_m[sch] = b;
+                    }
+                }
+
+
+                if (a == 6) {
+                    a = 0;
+                    b++;
+                    if (day % 7 == 0) {
+                        nedel++;
+                        if (nedel % 5 == 0) {
+                            mesec++;
+                        }
+                    }
+                    day++;
+                }
+
+            }
+        fout.close();
+        a = 1;
+        b = 1;
+        sch++;
+        }
+
+        return v_s_m, s_s_m;
+    }
+    //Проверка условия для топ 3 затратам за неделю
+    bool prover_n(int* a, int b, int c, int day,int nedel,int mesec,int day_end,int nedel_end,int mesec_end) {
+        bool ok = false;
+        if (c == 0) {
+            if (a[c] < b &&  nedel == nedel_end && mesec == mesec_end) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }if (c == 1) {
+            if (a[c] < b && b != a[c - 1] &&  nedel == nedel_end && mesec == mesec_end) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }if (c == 2) {
+            if (a[c] < b && b != a[c - 1] && b != a[c - 2] &&  nedel == nedel_end && mesec == mesec_end) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }
+    }
+    //Вычисление топ 3 за неделю
+    int* top_3_n(int a, int b, int* v_s_n, int* s_s_n, int d, int n, int m) {
+        ifstream fout;
+        int sch = 0;
+        while (sch < 3) {
+            fout.open("Kohel_zatrat.txt");
+            for (int day = 1, nedel = 1, mesec = 1, day_end = d - 6, nedel_end = n, mesec_end = m; !fout.eof(); a++) {
+                string word;
+                fout >> word;
+                if (a == 4) {
+                    int res = stoi(word);
+                    if (prover_n(v_s_n, res, sch, day, nedel, mesec, day_end, nedel_end, mesec_end)) {
+                        v_s_n[sch] = res;
+                        s_s_n[sch] = b;
+                    }
+                }
+
+
+                if (a == 6) {
+                    a = 0;
+                    b++;
+                    
+                    if (day % 7 == 0) {
+                        nedel++;
+                        if (nedel % 5 == 0) {
+                            mesec++;
+                        }
+                    }
+                    day++;
+                }
+
+            }
+            fout.close();
+            a = 1;
+            b = 1;
+            sch++;
+        }
+
+        return v_s_n, s_s_n;
+    }
+    //Внесение в отчёт топ 3 за месяц
+    void fail_ot_top3_z_m(int* b,int v_section, int s_section) {
+        
+        ofstream out;
+        out.open("Kohel_top3_zatrat_m.txt");
+        out << "Топ 3 по затратам с кошелька за последний месяц!\n";
+        for (int sch = 0; sch < 3; sch++) {
+         out << (sch + 1) << " место:\n";
+              ofstream fout9;
+              fout9.open("top3_zatrat_m_system.txt", ios_base::app);
+              ifstream fout6;
+              fout6.open("Kohel_zatrat.txt");
+              
+            for (; !fout6.eof(); v_section++) {
+                
+                
+
+                string word;
+                fout6 >> word;
+                if (s_section == b[sch] && v_section % 2 != 0) {
+                    out << word << " ";
+                    fout9 << word << " ";
+                }if (s_section == b[sch] && v_section % 2 == 0) {
+                    out << word << "\n";
+                    fout9 << word << "\n";
+                }
+
+
+                if (v_section == 6) {
+                    v_section = 0;
+                    s_section++;
+                    
+                }
+               
+            }
+            
+            fout6.close();
+            fout9.close();
+            s_section = 1;
+            v_section = 1;
+        }
+        out.close();
+        
+    }
+    //Внесение в отчёт топ 3 за неделю
+    void fail_ot_top3_z_n(int* b, int v_section, int s_section) {
+
+        ofstream out;
+        out.open("Kohel_top3_zatrat_n.txt");
+        out << "Топ 3 по затратам с кошелька за последнюю неделю!\n";
+        for (int sch = 0; sch < 3; sch++) {
+            out << (sch + 1) << " место:\n";
+            ofstream fout9;
+            fout9.open("top3_zatrat_n_system.txt", ios_base::app);
+            ifstream fout6;
+            fout6.open("Kohel_zatrat.txt");
+            for (; !fout6.eof(); v_section++) {
+
+
+
+                string word;
+                fout6 >> word;
+                if (s_section == b[sch] && v_section % 2 != 0) {
+                    out << word << " ";
+                    fout9 << word << " ";
+                }if (s_section == b[sch] && v_section % 2 == 0) {
+                    out << word << "\n";
+                    fout9 << word << "\n";
+                }
+
+
+                if (v_section == 6) {
+                    v_section = 0;
+                    s_section++;
+
+                }
+
+            }
+            fout6.close();
+            fout9.close();
+            s_section = 1;
+            v_section = 1;
+        }
+        out.close();
+
+    }
+    //Метод по топ 3 затратам 
+    void Koshel_top3_z(int d, int n, int m) {
+        //Сумма для сравнения затрат за месяц топ 3
+        int* v_s_m = new int[3];
+        v_s_m[0] = 0;
+        v_s_m[1] = 0;
+        v_s_m[2] = 0;
+        //Секция суммы для сравнения затрат за месяц топ 3
+        int* s_s_m = new int[3];
+        s_s_m[0] = 0;
+        s_s_m[1] = 0;
+        s_s_m[2] = 0;
+        //счётчики для секций
+        int v_section = 1;
+        int s_section = 1;        
+        top_3_m(v_section, s_section, v_s_m, s_s_m,m);
+        
+        
+        //Сумма для сравнения затрат за неделю топ 3
+        int* v_s_n = new int[3];
+        v_s_n[0] = 0;
+        v_s_n[1] = 0;
+        v_s_n[2] = 0;
+        //Секция суммы для сравнения затрат за неделю топ 3
+        int* s_s_n = new int[3];
+        s_s_n[0] = 0;
+        s_s_n[1] = 0;
+        s_s_n[2] = 0;
+        //Счётчики для секций
+        v_section = 1;
+        s_section = 1;
+        top_3_n(v_section, s_section, v_s_n, s_s_n, d, n, m);
+        //Внесение в фаил
+        s_section = 1;
+        v_section = 1;
+        fail_ot_top3_z_m(s_s_m, v_section, s_section);
+        s_section = 1;
+        v_section = 1;
+        fail_ot_top3_z_n(s_s_n, v_section, s_section);
+        
+    }
+
+    //ТОП 3 КАТЕГОРИИ
+
+    //Проверка условия для топ 3 категориям за месяц
+    bool prover_m_k(int m, int m_end) {
+        bool ok = false;
+        
+            if (m == m_end) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        
+    }
+    //Проверка условия для топ 3 категориям за неделю
+    bool prover_n_k(int n, int n_end,int m, int m_end) {
+        bool ok = false;
+
+        if (n == n_end&& m == m_end) {
+            ok = true;
+            return ok;
+        }
+        else {
+            return ok;
+        }
+
+    }
+    //Проверка на распределение в таблице топ 3 по категориям
+    bool prov_mest_v_top3_k(int a, int b, int c, int* r) {
+        bool ok = false;
+        if (c == 0) {
+            if (a > b) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }if (c == 1) {
+            if (a > b&&a!=r[c-1]) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }if (c == 2) {
+            if (a > b && a != r[c - 1] && a != r[c - 2]) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }
+    }
+    //Распределение в таблице топ 3 по категориям
+    int* top3_k(int* a, int* b, int* c) {
+
+        for (int sch = 0; sch < 3; sch++) {
+            int res=0;
+            for (int gg = 0; gg < 4; gg++) {
+                if (prov_mest_v_top3_k(a[gg], res, sch, c)) {
+                    res = a[gg];
+                    b[sch] = gg;
+                    c[sch] = res;
+                }
+            }
+        }
+
+        return b, c;
+    }
+    //Метод по топ 3 затратам по категориям
+    void koshel_top3_k(int d, int n, int m, string* kategory) {
+        //Иницилализация за последний месяц
+        int v_section = 1;
+        int s_section = 1;
+        int* s_k = new int[4];
+        s_k[0] = 0;
+        s_k[1] = 0;
+        s_k[2] = 0;
+        s_k[3] = 0;
+        //Вычисление затрат по каждой категории за последний месяц
+        ifstream fout;
+        int sch = 0;
+        
+            fout.open("Kohel_zatrat.txt");
+            int res;
+            for (int day = 1, nedel = 1, mesec = 1, m_end = m,kati=0; !fout.eof(); v_section++) {
+                
+                string word;
+                fout >> word;
+                if (v_section == 4 && prover_m_k(mesec, m_end)) {
+                  res = stoi(word);
+                }
+
+
+                if (v_section == 6) {
+                    if (prover_m_k(mesec, m_end)) {
+                        while (kategory[kati] != word) {
+                            kati++;
+                        }
+                        s_k[kati] += res;
+                        kati = 0;
+                    }
+
+                    v_section = 0;
+                    s_section++;
+                    if (day % 7 == 0) {
+                        nedel++;
+                        if (nedel % 5 == 0) {
+                            mesec++;
+                        }
+                    }
+                    day++;
+                    
+                }
+
+            }
+            fout.close();
+            v_section = 1;
+            s_section = 1;
+        
+        //Инициализация для таблици топ 3 за последний месяц
+        int* top3_n_elem = new int[3];
+        int* top3_s_elem = new int[3];
+        top3_k(s_k, top3_n_elem, top3_s_elem);
+        //Запись в фаил топ 3 за последний месяц
+        ofstream out;
+        out.open("Kohel_top3_kategory_m.txt");
+        out << "Топ 3 по категориям с кошелька за последний месяц!\n";
+        for (int sch = 0; sch < 3; sch++) {
+            out << (sch + 1) << " место:\n";
+            
+            out << kategory[top3_n_elem[sch]] << " " << top3_s_elem[sch] << "\n";
+        }
+        out.close();
+
+        ofstream fout9;
+        fout9.open("top3_kategory_m_system.txt", ios_base::app);
+        for (int sch = 0; sch < 4; sch++) {
+            
+
+            fout9 << s_k[sch] << " " << kategory[sch] << "\n";
+        }
+        fout9.close();
+
+        //Иницилализация за последнюю неделю
+        v_section = 1;
+        s_section = 1;
+        
+        s_k[0] = 0;
+        s_k[1] = 0;
+        s_k[2] = 0;
+        s_k[3] = 0;
+        //Вычисление затрат по каждой категории за последнюю неделю
+        ifstream out2;
+        sch = 0;
+       
+            out2.open("Kohel_zatrat.txt");
+            for (int day = 1, nedel = 1, mesec = 1, n_end = n, m_end = m, res, kati = 0; !out2.eof(); v_section++) {
+                string word;
+                out2 >> word;
+                if (v_section == 4 && prover_n_k(nedel, n_end,mesec, m_end)) {
+                    res = stoi(word);
+                    
+                }
+
+
+                if (v_section == 6) {
+                    if (prover_n_k(nedel, n_end, mesec, m_end)) {
+                        while (kategory[kati] != word) {
+                            kati++;
+                        }
+                        s_k[kati] += res;
+                        kati = 0;
+                    }
+
+                    v_section = 0;
+                    s_section++;
+                    if (day % 7 == 0) {
+                        nedel++;
+                        if (nedel % 5 == 0) {
+                            mesec++;
+                        }
+                    }
+                    day++;
+
+                }
+
+            }
+            out2.close();
+            v_section = 1;
+            s_section = 1;
+           
+        //Инициализация для таблици топ 3 за последнюю неделю
+        int* top3_n_element = new int[3];
+        int* top3_s_element = new int[3];
+        top3_k(s_k, top3_n_element, top3_s_element);
+        //Запись в фаил топ 3 за последнюю неделю
+        ofstream out3;
+        out3.open("Kohel_top3_kategory_n.txt");
+        out3 << "Топ 3 по категориям с кошелька за последнюю неделю!\n";
+        for (int sch = 0; sch < 3; sch++) {
+            out3 << (sch + 1) << " место:\n";
+            out3 << kategory[top3_n_element[sch]] << " " << top3_s_element[sch] << "\n";
+        }
+        out3.close();
+
+        ofstream fout8;
+        fout8.open("top3_kategory_n_system.txt", ios_base::app);
+        for (int sch = 0; sch < 4; sch++) {
+
+
+            fout8 << s_k[sch] << " " << kategory[sch] << "\n";
+        }
+        fout8.close();
+
+        
+    }
+    
+    int getkoshelek() {
+        return koshelek;
+    }
+};
+
+
+class D_karta {
+
+    int karta = 0;
+
+public:
+    D_karta() {
+        ofstream fout("D_karta_zatrat.txt");
+        fout.close();
+        ofstream out("D_karta_popoln.txt");
+        out.close();
+        ofstream ut("D_karta_top3_zatrat_m.txt");
+        ut.close();
+        ofstream ut1("D_karta_top3_zatrat_n.txt");
+        ut1.close();
+        ofstream t("D_karta_top3_kategory_m.txt");
+        t.close();
+        ofstream t1("D_karta_top3_kategory_n.txt");
+        t1.close();
+
+    }
+    // Пополнение денег
+    void popoln(int sym, int d, int n, int m) {
+        karta += sym;
+        ofstream fout;
+        fout.open("D_karta_popoln.txt", ios_base::app);
+        fout << "Дата: " << d << "." << n << "." << m << "\nСумма: " << sym << "\n";
+        fout.close();
+    }
+    // Внесение в общий отчёт затрат в кошельке
+    void zatrat(int d, int n, int m, int sym, string kategory) {
+        if (karta - sym > 0) {
+            karta -= sym;
+            ofstream fout;
+            fout.open("D_karta_zatrat.txt", ios_base::app);
+            fout << "Дата: " << d << "." << n << "." << m << "\nСумма: " << sym << "\nКатегория: " << kategory << "\n";
+            fout.close();
+        }
+        else {
+            int sym1;
+            cout << "Пополните счёт на дебетовой карте!(на сумму больше " << sym << ")\n";
+            do {
+                cin >> sym1;
+            } while (sym1 < sym);
+            popoln(sym1, d, n, m);
+            karta -= sym;
+            ofstream fout;
+            fout.open("D_karta_zatrat.txt", ios_base::app);
+            fout << "Дата: " << d << "." << n << "." << m << "\nСумма: " << sym << "\nКатегория: " << kategory << "\n";
+            fout.close();
+        }
+    }
+
+    //ТОП 3 ЗАТРАТ
+
+    //Проверка условия для топ 3 затратам за месяц
+    bool prover_m(int* a, int b, int c, int m, int m_end) {
+        bool ok = false;
+        if (c == 0) {
+            if (a[c] < b && m == m_end) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }if (c == 1) {
+            if (a[c] < b && b != a[c - 1] && m == m_end) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }if (c == 2) {
+            if (a[c] < b && b != a[c - 1] && b != a[c - 2] && m == m_end) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }
+    }
+    //Вычисление топ 3 за месяц
+    int* top_3_m(int a, int b, int* v_s_m, int* s_s_m, int m) {
+        ifstream fout;
+        int sch = 0;
+        while (sch < 3) {
+            fout.open("D_karta_zatrat.txt");
+            for (int day = 1, nedel = 1, mesec = 1, m_end = m; !fout.eof(); a++) {
+                string word;
+                fout >> word;
+                if (a == 4) {
+                    int res = stoi(word);
+                    if (prover_m(v_s_m, res, sch, mesec, m_end)) {
+                        v_s_m[sch] = res;
+                        s_s_m[sch] = b;
+                    }
+                }
+
+
+                if (a == 6) {
+                    a = 0;
+                    b++;
+                    if (day % 7 == 0) {
+                        nedel++;
+                        if (nedel % 5 == 0) {
+                            mesec++;
+                        }
+                    }
+                    day++;
+                }
+
+            }
+            fout.close();
+            a = 1;
+            b = 1;
+            sch++;
+        }
+
+        return v_s_m, s_s_m;
+    }
+    //Проверка условия для топ 3 затратам за неделю
+    bool prover_n(int* a, int b, int c, int day, int nedel, int mesec, int day_end, int nedel_end, int mesec_end) {
+        bool ok = false;
+        if (c == 0) {
+            if (a[c] < b && nedel == nedel_end && mesec == mesec_end) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }if (c == 1) {
+            if (a[c] < b && b != a[c - 1] && nedel == nedel_end && mesec == mesec_end) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }if (c == 2) {
+            if (a[c] < b && b != a[c - 1] && b != a[c - 2] && nedel == nedel_end && mesec == mesec_end) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }
+    }
+    //Вычисление топ 3 за неделю
+    int* top_3_n(int a, int b, int* v_s_n, int* s_s_n, int d, int n, int m) {
+        ifstream fout;
+        int sch = 0;
+        while (sch < 3) {
+            fout.open("D_karta_zatrat.txt");
+            for (int day = 1, nedel = 1, mesec = 1, day_end = d - 6, nedel_end = n, mesec_end = m; !fout.eof(); a++) {
+                string word;
+                fout >> word;
+                if (a == 4) {
+                    int res = stoi(word);
+                    if (prover_n(v_s_n, res, sch, day, nedel, mesec, day_end, nedel_end, mesec_end)) {
+                        v_s_n[sch] = res;
+                        s_s_n[sch] = b;
+                    }
+                }
+
+
+                if (a == 6) {
+                    a = 0;
+                    b++;
+
+                    if (day % 7 == 0) {
+                        nedel++;
+                        if (nedel % 5 == 0) {
+                            mesec++;
+                        }
+                    }
+                    day++;
+                }
+
+            }
+            fout.close();
+            a = 1;
+            b = 1;
+            sch++;
+        }
+
+        return v_s_n, s_s_n;
+    }
+    //Внесение в отчёт топ 3 за месяц
+    void fail_ot_top3_z_m(int* b, int v_section, int s_section) {
+
+        ofstream out;
+        out.open("D_karta_top3_zatrat_m.txt");
+        out << "Топ 3 по затратам с дебетовой карты за последний месяц!\n";
+        for (int sch = 0; sch < 3; sch++) {
+            out << (sch + 1) << " место:\n";
+            ofstream fout9;
+            fout9.open("top3_zatrat_m_system.txt", ios_base::app);
+            ifstream fout6;
+            fout6.open("D_karta_zatrat.txt");
+
+            for (; !fout6.eof(); v_section++) {
+
+
+
+                string word;
+                fout6 >> word;
+                if (s_section == b[sch] && v_section % 2 != 0) {
+                    out << word << " ";
+                    fout9 << word << " ";
+                }if (s_section == b[sch] && v_section % 2 == 0) {
+                    out << word << "\n";
+                    fout9 << word << "\n";
+                }
+
+
+                if (v_section == 6) {
+                    v_section = 0;
+                    s_section++;
+
+                }
+
+            }
+
+            fout6.close();
+            fout9.close();
+            s_section = 1;
+            v_section = 1;
+        }
+        out.close();
+
+    }
+    //Внесение в отчёт топ 3 за неделю
+    void fail_ot_top3_z_n(int* b, int v_section, int s_section) {
+
+        ofstream out;
+        out.open("D_karta_top3_zatrat_n.txt");
+        out << "Топ 3 по затратам с дебетовой карты за последнюю неделю!\n";
+        for (int sch = 0; sch < 3; sch++) {
+            out << (sch + 1) << " место:\n";
+            ofstream fout9;
+            fout9.open("top3_zatrat_n_system.txt", ios_base::app);
+            ifstream fout6;
+            fout6.open("D_karta_zatrat.txt");
+            for (; !fout6.eof(); v_section++) {
+
+
+
+                string word;
+                fout6 >> word;
+                if (s_section == b[sch] && v_section % 2 != 0) {
+                    out << word << " ";
+                    fout9 << word << " ";
+                }if (s_section == b[sch] && v_section % 2 == 0) {
+                    out << word << "\n";
+                    fout9 << word << "\n";
+                }
+
+
+                if (v_section == 6) {
+                    v_section = 0;
+                    s_section++;
+
+                }
+
+            }
+            fout6.close();
+            fout9.close();
+            s_section = 1;
+            v_section = 1;
+        }
+        out.close();
+
+    }
+    //Метод по топ 3 затратам 
+    void D_karta_top3_z(int d, int n, int m) {
+        //Сумма для сравнения затрат за месяц топ 3
+        int* v_s_m = new int[3];
+        v_s_m[0] = 0;
+        v_s_m[1] = 0;
+        v_s_m[2] = 0;
+        //Секция суммы для сравнения затрат за месяц топ 3
+        int* s_s_m = new int[3];
+        s_s_m[0] = 0;
+        s_s_m[1] = 0;
+        s_s_m[2] = 0;
+        //счётчики для секций
+        int v_section = 1;
+        int s_section = 1;
+        top_3_m(v_section, s_section, v_s_m, s_s_m, m);
+
+
+        //Сумма для сравнения затрат за неделю топ 3
+        int* v_s_n = new int[3];
+        v_s_n[0] = 0;
+        v_s_n[1] = 0;
+        v_s_n[2] = 0;
+        //Секция суммы для сравнения затрат за неделю топ 3
+        int* s_s_n = new int[3];
+        s_s_n[0] = 0;
+        s_s_n[1] = 0;
+        s_s_n[2] = 0;
+        //Счётчики для секций
+        v_section = 1;
+        s_section = 1;
+        top_3_n(v_section, s_section, v_s_n, s_s_n, d, n, m);
+        //Внесение в фаил
+        s_section = 1;
+        v_section = 1;
+        fail_ot_top3_z_m(s_s_m, v_section, s_section);
+        s_section = 1;
+        v_section = 1;
+        fail_ot_top3_z_n(s_s_n, v_section, s_section);
+
+    }
+
+    //ТОП 3 КАТЕГОРИИ
+
+    //Проверка условия для топ 3 категориям за месяц
+    bool prover_m_k(int m, int m_end) {
+        bool ok = false;
+
+        if (m == m_end) {
+            ok = true;
+            return ok;
+        }
+        else {
+            return ok;
+        }
+
+    }
+    //Проверка условия для топ 3 категориям за неделю
+    bool prover_n_k(int n, int n_end, int m, int m_end) {
+        bool ok = false;
+
+        if (n == n_end && m == m_end) {
+            ok = true;
+            return ok;
+        }
+        else {
+            return ok;
+        }
+
+    }
+    //Проверка на распределение в таблице топ 3 по категориям
+    bool prov_mest_v_top3_k(int a, int b, int c, int* r) {
+        bool ok = false;
+        if (c == 0) {
+            if (a > b) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }if (c == 1) {
+            if (a > b && a != r[c - 1]) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }if (c == 2) {
+            if (a > b && a != r[c - 1] && a != r[c - 2]) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }
+    }
+    //Распределение в таблице топ 3 по категориям
+    int* top3_k(int* a, int* b, int* c) {
+
+        for (int sch = 0; sch < 3; sch++) {
+            int res = 0;
+            for (int gg = 0; gg < 4; gg++) {
+                if (prov_mest_v_top3_k(a[gg], res, sch, c)) {
+                    res = a[gg];
+                    b[sch] = gg;
+                    c[sch] = res;
+                }
+            }
+        }
+
+        return b, c;
+    }
+    //Метод по топ 3 затратам по категориям
+    void D_karta_top3_k(int d, int n, int m, string* kategory) {
+        //Иницилализация за последний месяц
+        int v_section = 1;
+        int s_section = 1;
+        int* s_k = new int[4];
+        s_k[0] = 0;
+        s_k[1] = 0;
+        s_k[2] = 0;
+        s_k[3] = 0;
+        //Вычисление затрат по каждой категории за последний месяц
+        ifstream fout;
+        int sch = 0;
+       
+            fout.open("D_karta_zatrat.txt");
+            int res;
+            for (int day = 1, nedel = 1, mesec = 1, m_end = m, kati = 0; !fout.eof(); v_section++) {
+                
+                string word;
+                fout >> word;
+                if (v_section == 4 && prover_m_k(mesec, m_end)) {
+                    res = stoi(word);
+                }
+
+
+                if (v_section == 6) {
+                    if (prover_m_k(mesec, m_end)) {
+                        while (kategory[kati] != word) {
+                            kati++;
+                        }
+                        s_k[kati] += res;
+                        kati = 0;
+                    }
+
+                    v_section = 0;
+                    s_section++;
+                    if (day % 7 == 0) {
+                        nedel++;
+                        if (nedel % 5 == 0) {
+                            mesec++;
+                        }
+                    }
+                    day++;
+
+                }
+
+            }
+            fout.close();
+            v_section = 1;
+            s_section = 1;
+         
+        //Инициализация для таблици топ 3 за последний месяц
+        int* top3_n_elem = new int[3];
+        int* top3_s_elem = new int[3];
+        top3_k(s_k, top3_n_elem, top3_s_elem);
+        //Запись в фаил топ 3 за последний месяц
+        ofstream out;
+        out.open("D_karta_top3_kategory_m.txt");
+        out << "Топ 3 по категориям с дебетовой карты за последний месяц!\n";
+        for (int sch = 0; sch < 3; sch++) {
+            out << (sch + 1) << " место:\n";
+
+            out << kategory[top3_n_elem[sch]] << " " << top3_s_elem[sch] << "\n";
+        }
+        out.close();
+
+        ofstream fout9;
+        fout9.open("top3_kategory_m_system.txt", ios_base::app);
+        for (int sch = 0; sch < 4; sch++) {
+
+
+            fout9 << s_k[sch] << " " << kategory[sch] << "\n";
+        }
+        fout9.close();
+
+        //Иницилализация за последнюю неделю
+        v_section = 1;
+        s_section = 1;
+
+        s_k[0] = 0;
+        s_k[1] = 0;
+        s_k[2] = 0;
+        s_k[3] = 0;
+        //Вычисление затрат по каждой категории за последнюю неделю
+        ifstream out2;
+        sch = 0;
+        
+            out2.open("D_karta_zatrat.txt");
+            for (int day = 1, nedel = 1, mesec = 1, n_end = n, m_end = m, res, kati = 0; !out2.eof(); v_section++) {
+                string word;
+                out2 >> word;
+                if (v_section == 4 && prover_n_k(nedel, n_end, mesec, m_end)) {
+                    res = stoi(word);
+
+                }
+
+
+                if (v_section == 6) {
+                    if (prover_n_k(nedel, n_end, mesec, m_end)) {
+                        while (kategory[kati] != word) {
+                            kati++;
+                        }
+                        s_k[kati] += res;
+                        kati = 0;
+                    }
+
+                    v_section = 0;
+                    s_section++;
+                    if (day % 7 == 0) {
+                        nedel++;
+                        if (nedel % 5 == 0) {
+                            mesec++;
+                        }
+                    }
+                    day++;
+
+                }
+
+            }
+            out2.close();
+            v_section = 1;
+            s_section = 1;
+           
+        //Инициализация для таблици топ 3 за последнюю неделю
+        int* top3_n_element = new int[3];
+        int* top3_s_element = new int[3];
+        top3_k(s_k, top3_n_element, top3_s_element);
+        //Запись в фаил топ 3 за последнюю неделю
+        ofstream out3;
+        out3.open("D_karta_top3_kategory_n.txt");
+        out3 << "Топ 3 по категориям с дебетовой карты за последнюю неделю!\n";
+        for (int sch = 0; sch < 3; sch++) {
+            out3 << (sch + 1) << " место:\n";
+            out3 << kategory[top3_n_element[sch]] << " " << top3_s_element[sch] << "\n";
+        }
+        out3.close();
+
+        ofstream fout8;
+        fout8.open("top3_kategory_n_system.txt", ios_base::app);
+        for (int sch = 0; sch < 4; sch++) {
+
+
+            fout8 << s_k[sch] << " " << kategory[sch] << "\n";
+        }
+        fout8.close();
+
+
+    }
+
+    int getkarta() {
+        return karta;
+    }
+};
+
+
+class K_karta {
+
+    int karta = 0;
+
+public:
+    K_karta() {
+        ofstream fout("K_karta_zatrat.txt");
+        fout.close();
+        ofstream out("K_karta_popoln.txt");
+        out.close();
+        ofstream ut("K_karta_top3_zatrat_m.txt");
+        ut.close();
+        ofstream ut1("K_karta_top3_zatrat_n.txt");
+        ut1.close();
+        ofstream t("K_karta_top3_kategory_m.txt");
+        t.close();
+        ofstream t1("K_karta_top3_kategory_n.txt");
+        t1.close();
+
+    }
+    // Пополнение денег
+    void popoln(int sym, int d, int n, int m) {
+        karta += sym;
+        ofstream fout;
+        fout.open("K_karta_popoln.txt", ios_base::app);
+        fout << "Дата: " << d << "." << n << "." << m << "\nСумма: " << sym << "\n";
+        fout.close();
+    }
+    // Внесение в общий отчёт затрат в кошельке
+    void zatrat(int d, int n, int m, int sym, string kategory) {
+            karta -= sym;
+            ofstream fout;
+            fout.open("K_karta_zatrat.txt", ios_base::app);
+            fout << "Дата: " << d << "." << n << "." << m << "\nСумма: " << sym << "\nКатегория: " << kategory << "\n";
+            fout.close();
+       
+    }
+
+    //ТОП 3 ЗАТРАТ
+
+    //Проверка условия для топ 3 затратам за месяц
+    bool prover_m(int* a, int b, int c, int m, int m_end) {
+        bool ok = false;
+        if (c == 0) {
+            if (a[c] < b && m == m_end) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }if (c == 1) {
+            if (a[c] < b && b != a[c - 1] && m == m_end) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }if (c == 2) {
+            if (a[c] < b && b != a[c - 1] && b != a[c - 2] && m == m_end) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }
+    }
+    //Вычисление топ 3 за месяц
+    int* top_3_m(int a, int b, int* v_s_m, int* s_s_m, int m) {
+        ifstream fout;
+        int sch = 0;
+        while (sch < 3) {
+            fout.open("K_karta_zatrat.txt");
+            for (int day = 1, nedel = 1, mesec = 1, m_end = m; !fout.eof(); a++) {
+                string word;
+                fout >> word;
+                if (a == 4) {
+                    int res = stoi(word);
+                    if (prover_m(v_s_m, res, sch, mesec, m_end)) {
+                        v_s_m[sch] = res;
+                        s_s_m[sch] = b;
+                    }
+                }
+
+
+                if (a == 6) {
+                    a = 0;
+                    b++;
+                    if (day % 7 == 0) {
+                        nedel++;
+                        if (nedel % 5 == 0) {
+                            mesec++;
+                        }
+                    }
+                    day++;
+                }
+
+            }
+            fout.close();
+            a = 1;
+            b = 1;
+            sch++;
+        }
+
+        return v_s_m, s_s_m;
+    }
+    //Проверка условия для топ 3 затратам за неделю
+    bool prover_n(int* a, int b, int c, int day, int nedel, int mesec, int day_end, int nedel_end, int mesec_end) {
+        bool ok = false;
+        if (c == 0) {
+            if (a[c] < b && nedel == nedel_end && mesec == mesec_end) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }if (c == 1) {
+            if (a[c] < b && b != a[c - 1] && nedel == nedel_end && mesec == mesec_end) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }if (c == 2) {
+            if (a[c] < b && b != a[c - 1] && b != a[c - 2] && nedel == nedel_end && mesec == mesec_end) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }
+    }
+    //Вычисление топ 3 за неделю
+    int* top_3_n(int a, int b, int* v_s_n, int* s_s_n, int d, int n, int m) {
+        ifstream fout;
+        int sch = 0;
+        while (sch < 3) {
+            fout.open("K_karta_zatrat.txt");
+            for (int day = 1, nedel = 1, mesec = 1, day_end = d - 6, nedel_end = n, mesec_end = m; !fout.eof(); a++) {
+                string word;
+                fout >> word;
+                if (a == 4) {
+                    int res = stoi(word);
+                    if (prover_n(v_s_n, res, sch, day, nedel, mesec, day_end, nedel_end, mesec_end)) {
+                        v_s_n[sch] = res;
+                        s_s_n[sch] = b;
+                    }
+                }
+
+
+                if (a == 6) {
+                    a = 0;
+                    b++;
+
+                    if (day % 7 == 0) {
+                        nedel++;
+                        if (nedel % 5 == 0) {
+                            mesec++;
+                        }
+                    }
+                    day++;
+                }
+
+            }
+            fout.close();
+            a = 1;
+            b = 1;
+            sch++;
+        }
+
+        return v_s_n, s_s_n;
+    }
+    //Внесение в отчёт топ 3 за месяц
+    void fail_ot_top3_z_m(int* b, int v_section, int s_section) {
+
+        ofstream out;
+        out.open("K_karta_top3_zatrat_m.txt");
+        out << "Топ 3 по затратам с кредитной карты за последний месяц!\n";
+        for (int sch = 0; sch < 3; sch++) {
+            out << (sch + 1) << " место:\n";
+            ofstream fout9;
+            fout9.open("top3_zatrat_m_system.txt", ios_base::app);
+            ifstream fout6;
+            fout6.open("K_karta_zatrat.txt");
+
+            for (; !fout6.eof(); v_section++) {
+
+
+
+                string word;
+                fout6 >> word;
+                if (s_section == b[sch] && v_section % 2 != 0) {
+                    out << word << " ";
+                    fout9 << word << " ";
+                }if (s_section == b[sch] && v_section % 2 == 0) {
+                    out << word << "\n";
+                    fout9 << word << "\n";
+                }
+
+
+                if (v_section == 6) {
+                    v_section = 0;
+                    s_section++;
+
+                }
+
+            }
+
+            fout6.close();
+            fout9.close();
+            s_section = 1;
+            v_section = 1;
+        }
+        out.close();
+
+    }
+    //Внесение в отчёт топ 3 за неделю
+    void fail_ot_top3_z_n(int* b, int v_section, int s_section) {
+
+        ofstream out;
+        out.open("K_karta_top3_zatrat_n.txt");
+        out << "Топ 3 по затратам с кредитной карты за последнюю неделю!\n";
+        for (int sch = 0; sch < 3; sch++) {
+            out << (sch + 1) << " место:\n";
+            ofstream fout9;
+            fout9.open("top3_zatrat_n_system.txt", ios_base::app);
+            ifstream fout6;
+            fout6.open("K_karta_zatrat.txt");
+            for (; !fout6.eof(); v_section++) {
+
+
+
+                string word;
+                fout6 >> word;
+                if (s_section == b[sch] && v_section % 2 != 0) {
+                    out << word << " ";
+                    fout9 << word << " ";
+                }if (s_section == b[sch] && v_section % 2 == 0) {
+                    out << word << "\n";
+                    fout9 << word << "\n";
+                }
+
+
+                if (v_section == 6) {
+                    v_section = 0;
+                    s_section++;
+
+                }
+
+            }
+            fout6.close();
+            fout9.close();
+            s_section = 1;
+            v_section = 1;
+        }
+        out.close();
+
+    }
+    //Метод по топ 3 затратам 
+    void K_karta_top3_z(int d, int n, int m) {
+        //Сумма для сравнения затрат за месяц топ 3
+        int* v_s_m = new int[3];
+        v_s_m[0] = 0;
+        v_s_m[1] = 0;
+        v_s_m[2] = 0;
+        //Секция суммы для сравнения затрат за месяц топ 3
+        int* s_s_m = new int[3];
+        s_s_m[0] = 0;
+        s_s_m[1] = 0;
+        s_s_m[2] = 0;
+        //счётчики для секций
+        int v_section = 1;
+        int s_section = 1;
+        top_3_m(v_section, s_section, v_s_m, s_s_m, m);
+
+
+        //Сумма для сравнения затрат за неделю топ 3
+        int* v_s_n = new int[3];
+        v_s_n[0] = 0;
+        v_s_n[1] = 0;
+        v_s_n[2] = 0;
+        //Секция суммы для сравнения затрат за неделю топ 3
+        int* s_s_n = new int[3];
+        s_s_n[0] = 0;
+        s_s_n[1] = 0;
+        s_s_n[2] = 0;
+        //Счётчики для секций
+        v_section = 1;
+        s_section = 1;
+        top_3_n(v_section, s_section, v_s_n, s_s_n, d, n, m);
+        //Внесение в фаил
+        s_section = 1;
+        v_section = 1;
+        fail_ot_top3_z_m(s_s_m, v_section, s_section);
+        s_section = 1;
+        v_section = 1;
+        fail_ot_top3_z_n(s_s_n, v_section, s_section);
+
+    }
+
+    //ТОП 3 КАТЕГОРИИ
+
+    //Проверка условия для топ 3 категориям за месяц
+    bool prover_m_k(int m, int m_end) {
+        bool ok = false;
+
+        if (m == m_end) {
+            ok = true;
+            return ok;
+        }
+        else {
+            return ok;
+        }
+
+    }
+    //Проверка условия для топ 3 категориям за неделю
+    bool prover_n_k(int n, int n_end, int m, int m_end) {
+        bool ok = false;
+
+        if (n == n_end && m == m_end) {
+            ok = true;
+            return ok;
+        }
+        else {
+            return ok;
+        }
+
+    }
+    //Проверка на распределение в таблице топ 3 по категориям
+    bool prov_mest_v_top3_k(int a, int b, int c, int* r) {
+        bool ok = false;
+        if (c == 0) {
+            if (a > b) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }if (c == 1) {
+            if (a > b && a != r[c - 1]) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }if (c == 2) {
+            if (a > b && a != r[c - 1] && a != r[c - 2]) {
+                ok = true;
+                return ok;
+            }
+            else {
+                return ok;
+            }
+        }
+    }
+    //Распределение в таблице топ 3 по категориям
+    int* top3_k(int* a, int* b, int* c) {
+
+        for (int sch = 0; sch < 3; sch++) {
+            int res = 0;
+            for (int gg = 0; gg < 4; gg++) {
+                if (prov_mest_v_top3_k(a[gg], res, sch, c)) {
+                    res = a[gg];
+                    b[sch] = gg;
+                    c[sch] = res;
+                }
+            }
+        }
+
+        return b, c;
+    }
+    //Метод по топ 3 затратам по категориям
+    void K_karta_top3_k(int d, int n, int m, string* kategory) {
+        //Иницилализация за последний месяц
+        int v_section = 1;
+        int s_section = 1;
+        int* s_k = new int[4];
+        s_k[0] = 0;
+        s_k[1] = 0;
+        s_k[2] = 0;
+        s_k[3] = 0;
+        //Вычисление затрат по каждой категории за последний месяц
+        ifstream fout;
+        int sch = 0;
+       
+            fout.open("K_karta_zatrat.txt");
+            int res;
+            for (int day = 1, nedel = 1, mesec = 1, m_end = m, kati = 0; !fout.eof(); v_section++) {
+                
+                string word;
+                fout >> word;
+                if (v_section == 4 && prover_m_k(mesec, m_end)) {
+                    res = stoi(word);
+                }
+
+
+                if (v_section == 6) {
+                    if (prover_m_k(mesec, m_end)) {
+                        while (kategory[kati] != word) {
+                            kati++;
+                        }
+                        s_k[kati] += res;
+                        kati = 0;
+                    }
+
+                    v_section = 0;
+                    s_section++;
+                    if (day % 7 == 0) {
+                        nedel++;
+                        if (nedel % 5 == 0) {
+                            mesec++;
+                        }
+                    }
+                    day++;
+
+                }
+
+            }
+            fout.close();
+            v_section = 1;
+            s_section = 1;
+           
+        //Инициализация для таблици топ 3 за последний месяц
+        int* top3_n_elem = new int[3];
+        int* top3_s_elem = new int[3];
+        top3_k(s_k, top3_n_elem, top3_s_elem);
+        //Запись в фаил топ 3 за последний месяц
+        ofstream out;
+        out.open("K_karta_top3_kategory_m.txt");
+        out << "Топ 3 по категориям с кредитной карты за последний месяц!\n";
+        for (int sch = 0; sch < 3; sch++) {
+            out << (sch + 1) << " место:\n";
+
+            out << kategory[top3_n_elem[sch]] << " " << top3_s_elem[sch] << "\n";
+        }
+        out.close();
+
+        ofstream fout9;
+        fout9.open("top3_kategory_m_system.txt", ios_base::app);
+        for (int sch = 0; sch < 4; sch++) {
+
+
+            fout9 << s_k[sch] << " " << kategory[sch] << "\n";
+        }
+        fout9.close();
+
+        //Иницилализация за последнюю неделю
+        v_section = 1;
+        s_section = 1;
+
+        s_k[0] = 0;
+        s_k[1] = 0;
+        s_k[2] = 0;
+        s_k[3] = 0;
+        //Вычисление затрат по каждой категории за последнюю неделю
+        ifstream out2;
+        sch = 0;
+        
+            out2.open("K_karta_zatrat.txt");
+            for (int day = 1, nedel = 1, mesec = 1, n_end = n, m_end = m, res, kati = 0; !out2.eof(); v_section++) {
+                string word;
+                out2 >> word;
+                if (v_section == 4 && prover_n_k(nedel, n_end, mesec, m_end)) {
+                    res = stoi(word);
+
+                }
+
+
+                if (v_section == 6) {
+                    if (prover_n_k(nedel, n_end, mesec, m_end)) {
+                        while (kategory[kati] != word) {
+                            kati++;
+                        }
+                        s_k[kati] += res;
+                        kati = 0;
+                    }
+
+                    v_section = 0;
+                    s_section++;
+                    if (day % 7 == 0) {
+                        nedel++;
+                        if (nedel % 5 == 0) {
+                            mesec++;
+                        }
+                    }
+                    day++;
+
+                }
+
+            }
+            out2.close();
+            v_section = 1;
+            s_section = 1;
+          
+        //Инициализация для таблици топ 3 за последнюю неделю
+        int* top3_n_element = new int[3];
+        int* top3_s_element = new int[3];
+        top3_k(s_k, top3_n_element, top3_s_element);
+        //Запись в фаил топ 3 за последнюю неделю
+        ofstream out3;
+        out3.open("K_karta_top3_kategory_n.txt");
+        out3 << "Топ 3 по категориям с кредитной карты за последнюю неделю!\n";
+        for (int sch = 0; sch < 3; sch++) {
+            out3 << (sch + 1) << " место:\n";
+            out3 << kategory[top3_n_element[sch]] << " " << top3_s_element[sch] << "\n";
+        }
+        out3.close();
+
+        ofstream fout8;
+        fout8.open("top3_kategory_n_system.txt", ios_base::app);
+        for (int sch = 0; sch < 4; sch++) {
+
+
+            fout8 << s_k[sch] << " " << kategory[sch] << "\n";
+        }
+        fout8.close();
+
+
+    }
+
+    int getkarta() {
+        return karta;
+    }
+};
+
+
+bool prover_m_ob(int* a, int b, int c) {
+    bool ok = false;
+    if (c == 0) {
+        if (a[c] < b) {
+            ok = true;
+            return ok;
+        }
+        else {
+            return ok;
+        }
+    }if (c == 1) {
+        if (a[c] < b && b != a[c - 1]) {
+            ok = true;
+            return ok;
+        }
+        else {
+            return ok;
+        }
+    }if (c == 2) {
+        if (a[c] < b && b != a[c - 1] && b != a[c - 2]) {
+            ok = true;
+            return ok;
+        }
+        else {
+            return ok;
+        }
+    }
+}
+
+bool prov_mest_v_top3_k_ob(int a, int b, int c, int* r) {
+    bool ok = false;
+    if (c == 0) {
+        if (a > b) {
+            ok = true;
+            return ok;
+        }
+        else {
+            return ok;
+        }
+    }if (c == 1) {
+        if (a > b && a != r[c - 1]) {
+            ok = true;
+            return ok;
+        }
+        else {
+            return ok;
+        }
+    }if (c == 2) {
+        if (a > b && a != r[c - 1] && a != r[c - 2]) {
+            ok = true;
+            return ok;
+        }
+        else {
+            return ok;
+        }
+    }
+}
+
+int* top3_k_ob(int* a, int* b, int* c) {
+
+    for (int sch = 0; sch < 3; sch++) {
+        int res = 0;
+        for (int gg = 0; gg < 4; gg++) {
+            if (prov_mest_v_top3_k_ob(a[gg], res, sch, c)) {
+                res = a[gg];
+                b[sch] = gg;
+                c[sch] = res;
+            }
+        }
+    }
+
+    return b, c;
+}
+
+void TOP3(string* kategory) {
+    //Сумма для сравнения затрат за месяц топ 3
+    int* v_s = new int[3];
+    v_s[0] = 0;
+    v_s[1] = 0;
+    v_s[2] = 0;
+    //Секция суммы для сравнения затрат за месяц топ 3
+    int* s_s = new int[3];
+    s_s[0] = 0;
+    s_s[1] = 0;
+    s_s[2] = 0;
+    //счётчики для секций
+    int v_section = 1;
+    int s_section = 1;
+
+    ifstream fout;
+    int sch = 0;
+    while (sch < 3) {
+        fout.open("top3_zatrat_m_system.txt");
+        for (; !fout.eof(); v_section++) {
+            string word;
+            fout >> word;
+            if (v_section == 4) {
+                int res = stoi(word);
+                if (prover_m_ob(v_s, res, sch)) {
+                    v_s[sch] = res;
+                    s_s[sch] = s_section;
+                }
+            }
+
+
+            if (v_section == 6) {
+                v_section = 0;
+                s_section++;
+                
+            }
+
+        }
+        fout.close();
+        v_section = 1;
+        s_section = 1;
+        sch++;
+    }
+
+    v_section = 1;
+    s_section = 1;
+    ofstream out;
+    out.open("top3_zatrat_m.txt");
+    out << "Топ 3 по затратам за последний месяц!(общее)\n";
+    for (int sch = 0; sch < 3; sch++) {
+        out << (sch + 1) << " место:\n";
+        
+        ifstream fout6;
+        fout6.open("top3_zatrat_m_system.txt");
+
+        for (; !fout6.eof(); v_section++) {
+
+
+
+            string word;
+            fout6 >> word;
+            if (s_section == s_s[sch] && v_section % 2 != 0) {
+                out << word << " ";
+                
+            }if (s_section == s_s[sch] && v_section % 2 == 0) {
+                out << word << "\n";
+                
+            }
+
+
+            if (v_section == 6) {
+                v_section = 0;
+                s_section++;
+
+            }
+
+        }
+
+        fout6.close();
+        
+        s_section = 1;
+        v_section = 1;
+    }
+    out.close();
+    //-------------------------------------------------------
+    v_s[0] = 0;
+    v_s[1] = 0;
+    v_s[2] = 0;
+    
+    s_s[0] = 0;
+    s_s[1] = 0;
+    s_s[2] = 0;
+
+    ifstream fout1;
+    sch = 0;
+    while (sch < 3) {
+        fout1.open("top3_zatrat_n_system.txt");
+        for (; !fout1.eof(); v_section++) {
+            string word;
+            fout1 >> word;
+            if (v_section == 4) {
+                int res = stoi(word);
+                if (prover_m_ob(v_s, res, sch)) {
+                    v_s[sch] = res;
+                    s_s[sch] = s_section;
+                }
+            }
+
+
+            if (v_section == 6) {
+                v_section = 0;
+                s_section++;
+
+            }
+
+        }
+        fout1.close();
+        v_section = 1;
+        s_section = 1;
+        sch++;
+    }
+
+    v_section = 1;
+    s_section = 1;
+    ofstream out1;
+    out1.open("top3_zatrat_n.txt");
+    out1 << "Топ 3 по затратам за последнюю неделю!(общее)\n";
+    for (int sch = 0; sch < 3; sch++) {
+        out1 << (sch + 1) << " место:\n";
+
+        ifstream fout61;
+        fout61.open("top3_zatrat_n_system.txt");
+
+        for (; !fout61.eof(); v_section++) {
+
+
+
+            string word;
+            fout61 >> word;
+            if (s_section == s_s[sch] && v_section % 2 != 0) {
+                out1 << word << " ";
+
+            }if (s_section == s_s[sch] && v_section % 2 == 0) {
+                out1 << word << "\n";
+
+            }
+
+
+            if (v_section == 6) {
+                v_section = 0;
+                s_section++;
+
+            }
+
+        }
+
+        fout61.close();
+
+        s_section = 1;
+        v_section = 1;
+    }
+    out1.close();
+
+    //-------------------------------------------------------
+    s_section = 1;
+    int* s_k = new int[4];
+    v_section = 1;
+    s_k[0] = 0;
+    s_k[1] = 0;
+    s_k[2] = 0;
+    s_k[3] = 0;
+    ifstream fout87;
+    
+    
+        fout87.open("top3_kategory_m_system.txt");
+        for (int res, kati=0; !fout87.eof(); v_section++) {
+            string word;
+            fout87 >> word;
+            if (v_section == 1&&s_section<13) {
+                res = stoi(word);
+            }
+
+
+            if (v_section == 2) {
+                
+                    while (kategory[kati] != word) {
+                        kati++;
+                    }
+                    s_k[kati] += res;
+                    kati = 0;
+               
+                s_section ++;
+                v_section = 0;
+                
+                
+
+            }
+
+        }
+        fout87.close();
+        v_section = 1;
+        s_section = 1;
+        
+
+    v_section = 1;
+    
+    int* top3_n_element = new int[3];
+    int* top3_s_element = new int[3];
+    top3_k_ob(s_k, top3_n_element, top3_s_element);
+    ofstream out3;
+    out3.open("top3_kategory_m.txt");
+    out3 << "Топ 3 по категориям за последний месяц!\n";
+    for (int sch = 0; sch < 3; sch++) {
+        out3 << (sch + 1) << " место:\n";
+        out3 << kategory[top3_n_element[sch]] << " " << top3_s_element[sch] << "\n";
+    }
+    out3.close();
+
+    //-------------------------------------------------------
+    v_section = 1;
+    s_k[0] = 0;
+    s_k[1] = 0;
+    s_k[2] = 0;
+    s_k[3] = 0;
+    ifstream fout3;
+    
+    
+        fout3.open("top3_kategory_n_system.txt");
+        for (int res, kati = 0; !fout3.eof(); v_section++) {
+            string word;
+            fout3 >> word;
+            if (v_section == 1 && s_section < 13) {
+                res = stoi(word);
+            }
+
+
+            if (v_section == 2) {
+
+                while (kategory[kati] != word) {
+                    kati++;
+                }
+                s_k[kati] += res;
+                kati = 0;
+
+
+                v_section = 0;
+                s_section++;
+
+
+            }
+
+        }
+        fout3.close();
+        v_section = 1;
+        s_section = 1;
+        
+
+    v_section = 1;
+
+    int* top3_n_elem = new int[3];
+    int* top3_s_elem = new int[3];
+    top3_k_ob(s_k, top3_n_elem, top3_s_elem);
+    ofstream out37;
+    out37.open("top3_kategory_n.txt");
+    out37 << "Топ 3 по категориям за последнюю неделю!\n";
+    for (int sch = 0; sch < 3; sch++) {
+        out37 << (sch + 1) << " место:\n";
+        out37 << kategory[top3_n_elem[sch]] << " " << top3_s_elem[sch] << "\n";
+    }
+    out37.close();
+    
+}
+
+int main()
+{
+    setlocale(LC_ALL, "rus");
+    srand(time(NULL));
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+    string* kategory = new string[4];
+    kategory[0] = ("Еда");
+    kategory[1] = ("Подарки");
+    kategory[2] = ("Развлечения");
+    kategory[3] = ("Поездки");
+    ofstream ut7("top3_zatrat_m_system.txt");
+    ut7.close();
+    ofstream ut18("top3_zatrat_n_system.txt");
+    ut18.close();
+    ofstream t7("top3_kategory_m_system.txt");
+    t7.close();
+    ofstream t18("top3_kategory_n_system.txt");
+    t18.close();
+
+    ofstream ut71("top3_zatrat_m.txt");
+    ut71.close();
+    ofstream ut182("top3_zatrat_n.txt");
+    ut182.close();
+    ofstream t73("top3_kategory_m.txt");
+    t73.close();
+    ofstream t184("top3_kategory_n.txt");
+    t184.close();
+    koshel one;
+    int m = 1, n = 1, d = 1;
+    while (m <= 1) {
+     
+
+     
+     int sym = rand() % 999 + 1;
+     int kat = rand() % 4;
+     one.zatrat(d, n, m, sym, kategory[kat]);
+     d++;
+     if (d % 29 == 0) {
+         m++;
+     }
+     if ((d-1) % 7 == 0) {
+         n++;
+     }
+    }
+    one.Koshel_top3_z(d, (n-1), (m-1));
+    one.koshel_top3_k(d, (n - 1), (m - 1),kategory);
+    
+    D_karta two;
+    m = 1, n = 1, d = 1;
+    while (m <= 1) {
+
+
+
+        int sym = rand() % 999 + 1;
+        int kat = rand() % 4;
+        two.zatrat(d, n, m, sym, kategory[kat]);
+        d++;
+        if (d % 29 == 0) {
+            m++;
+        }
+        if ((d - 1) % 7 == 0) {
+            n++;
+        }
+    }
+    two.D_karta_top3_z(d, (n - 1), (m - 1));
+    two.D_karta_top3_k(d, (n - 1), (m - 1), kategory);
+    m = 1, n = 1, d = 1;
+    K_karta three;
+    cout << "На вашей карте 0 рублей, желаете пополнить счёт кредитной карты перед использованием?\n";
+    cout << "1 - да\n";
+    cout << "2 - нет\n";
+    int vib;
+    cin>> vib;
+    if (vib == 1) {
+        int symma;
+        cout << "Введите на сколько хотите пополнить!\n";
+        cin >> symma;
+        three.popoln(symma, d, n, m);
+    }
+    
+    while (m <= 1) {
+
+
+
+        int sym = rand() % 999 + 1;
+        int kat = rand() % 4;
+        three.zatrat(d, n, m, sym, kategory[kat]);
+        d++;
+        if (d % 29 == 0) {
+            m++;
+        }
+        if ((d - 1) % 7 == 0) {
+            n++;
+        }
+    }
+    three.K_karta_top3_z(d, (n - 1), (m - 1));
+    three.K_karta_top3_k(d, (n - 1), (m - 1), kategory);
+
+    cout << "Состояние счетов:\n";
+    cout << "Электронный кошелёк -> "<< one.getkoshelek()<<"\n";
+    cout << "Дебетовая карта -> " << two.getkarta() << "\n";
+    cout << "Кредитная карта -> " << three.getkarta() << "\n";
+    TOP3(kategory);
+    return 0;
+}
